@@ -1,0 +1,11 @@
+<launch>
+
+	<group ns="pdt_module">
+		<node pkg="pdt_module" type="stixel_world" name="stixel_world_node" args="-c $(find pdt_module)/src/stixel_world/fast.config.ini">
+			<!-- <remap from="topic_name" to="topic_name" /> -->
+			<!-- <param name="ConfigFile" value="new_file_name" /> -->
+		</node>
+		<!-- <node pkg="turtlesim" type="ground_estimation" name="ground_estimation_node" args="-c ConfigFile.txt" /> -->
+	</group>
+
+</launch>

@@ -1,0 +1,18 @@
+<launch>
+
+	<group ns="pdt_module">
+
+		<node pkg="pdt_module" type="image_test_reader_node" name="image_test_reader_node">
+			<remap from="/pdt_module/image_test_reader_node/left_image" to="/stereo/color/left/image_raw" />
+			<remap from="/pdt_module/image_test_reader_node/right_image" to="/stereo/color/right/image_raw" />
+			<remap from="/pdt_module/image_test_reader_node/next_frame_service" to="/next_frame_service" />
+		</node>
+
+		<node pkg="pdt_module" type="image_test_printer_node" name="image_test_printer_node">
+			<remap from="/pdt_module/image_test_printer_node/left_image" to="/pdt_module/image_test_reader_node/capture_left_frame" />
+			<remap from="/pdt_module/image_test_printer_node/right_image" to="/pdt_module/image_test_reader_node/capture_right_frame" />
+			<remap from="/pdt_module/image_test_printer_node/next_frame_service" to="/next_frame_service" />
+		</node>
+
+	</group>
+</launch>

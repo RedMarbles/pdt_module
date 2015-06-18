@@ -1,0 +1,9 @@
+<launch>
+
+	<group ns="pdt_module">
+		<node pkg="pdt_module" type="image_read_node" name="image_read_node_instance">
+			<remap from="/pdt_module/image_read_node_instance/left_image" to="/stereo/color/left/image_raw" />
+			<remap from="/pdt_module/image_read_node_instance/right_image" to="/stereo/color/right/image_raw" />
+		</node>
+	</group>
+</launch>

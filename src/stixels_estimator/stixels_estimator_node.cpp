@@ -1,0 +1,1 @@
+// Uses services to compute stixels on the image

@@ -1,0 +1,13 @@
+<launch>
+
+	<group ns="pdt_module">
+		<node pkg="pdt_module" type="video_input_node" name="video_input_node">
+			<remap from="/pdt_module/video_input_node/input_left_image_topic" to="/stereo/color/left/image_raw" />
+			<remap from="/pdt_module/video_input_node/input_right_image_topic" to="/stereo/color/right/image_raw" />
+			<!--
+			<remap from="/pdt_module/video_input_node/output_left_image_topic" to="reduced_left_image"/>
+			<remap from="/pdt_module/video_input_node/output_right_image_topic" to="reduced_right_image"/>
+			-->
+		</node>
+	</group>
+</launch>
