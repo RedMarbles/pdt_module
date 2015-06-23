@@ -1,0 +1,13 @@
+<launch>
+
+	<group ns="pdt_module">
+		<node pkg="pdt_module" type="object_detector_node" name="object_detector_node" args="-c $(find pdt_module)/src/object_detector/test_monocular_objects_detection_lib.config.ini">
+			<remap from= "pdt_module/object_detector_node/fetch_stereo_service" to="/pdt_module/video_input_node/fetch_stereo_frame_service"/>
+			<remap from="pdt_module/object_detector_node/next_frame_service"  to="/pdt_module/video_input_node/load_next_frame_service" />
+			<!--
+			<remap from="/pdt_module/video_input_node/output_left_image_topic" to="reduced_left_image"/>
+			<remap from="/pdt_module/video_input_node/output_right_image_topic" to="reduced_right_image"/>
+			-->
+		</node>
+	</group>
+</launch>
