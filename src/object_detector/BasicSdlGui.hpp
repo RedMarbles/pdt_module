@@ -30,4 +30,5 @@ public:
 
 } //exit pdt_module namespace
 
-#endif _BASICSDLGUI_HPP_
+#endif 
+//endblock _BASICSDLGUI_HPP_

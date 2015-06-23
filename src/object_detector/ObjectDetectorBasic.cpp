@@ -8,6 +8,7 @@
 #include <fstream>
 #include <cstdlib>
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -34,6 +35,9 @@
 namespace pdt_module
 {
 
+using namespace doppia;
+using namespace std;
+
 ObjectDetectorBasic::ObjectDetectorBasic(int argc, char** argv) : _nh("~")
 {
 	next_frame_client = _nh.serviceClient<std_srvs::Empty>("next_frame_service");
@@ -57,13 +61,12 @@ void ObjectDetectorBasic::main_loop()
 	while(ros::ok())
     {
         //Call service for next frame
-        std_srvs::Empty empty_serv;
-        next_frame_client.call(empty_serv);
+        std_srvs::Empty empty_srv;
+        next_frame_client.call(empty_srv);
 
         //Call service to fetch next frame
-        pdt_module::FetchStereoImages stereo_serv;
-        bool repeat_fetch_call = true;
-        while( !(fetch_stereo_client.call(stereo_serv)) )
+        pdt_module::FetchStereoImages stereo_srv;
+        while( !(fetch_stereo_client.call(stereo_srv)) )
         {
             ros::Duration(0.001).sleep(); //Sleep for 1 millisecond
         }
@@ -71,7 +74,8 @@ void ObjectDetectorBasic::main_loop()
         convert_sensor_to_gil(stereo_srv.response.left_image,  left_image);
         convert_sensor_to_gil(stereo_srv.response.right_image, right_image);
 
-        set_monocular_image(left_image);
+        input_image_const_view_t temp_left = left_image;
+        set_monocular_image(temp_left);
 
         objects_detector_p->compute();
         gui_p->set_stereo_output(left_image, right_image);
@@ -80,7 +84,7 @@ void ObjectDetectorBasic::main_loop()
 }
 
 //Uses the boost::program_options library to get the configuration settings
-boost::program_options::variables_map& ObjectDetectorBasic::parse_arguments(int argc, char *argv[], boost::program_options::options_description& desc) const
+boost::program_options::variables_map ObjectDetectorBasic::parse_arguments(int argc, char *argv[], boost::program_options::options_description& desc) const
 {
 	// boost::program_options::options_description desc("Allowed options");
 	// get_options_description(desc);
@@ -113,7 +117,7 @@ boost::program_options::variables_map& ObjectDetectorBasic::parse_arguments(int 
 
     // parse the configuration file
     {
-        string configuration_filename;
+        std::string configuration_filename;
         if(options.count("configuration_file") > 0)
         {
             configuration_filename = get_option_value<std::string>(options, "configuration_file");
@@ -130,7 +134,7 @@ boost::program_options::variables_map& ObjectDetectorBasic::parse_arguments(int 
             {
                 // cout << "\033[1;31mCould not find the configuration file:\033[0m "
                 //      << configuration_file_path << endl;
-                ROS_ERROR("Could not find the configuration file: %s",configuration_filename);
+                ROS_ERROR("Could not find the configuration file: %s",configuration_filename.c_str());
                 return options;
             }
             ROS_INFO("Going to parse the configuration file: %s\n", configuration_filename.c_str());
@@ -146,11 +150,11 @@ boost::program_options::variables_map& ObjectDetectorBasic::parse_arguments(int 
                 // cout << "\033[1;31mError parsing THE configuration file named:\033[0m "
                 //      << configuration_filename << endl;
                 // cout << desc << endl;
-                ROS_ERROR("Error parsing the configuration file named: %s",configuration_filename);
+                ROS_ERROR("Error parsing the configuration file named: %s",configuration_filename.c_str());
                 throw;
             }
             // cout << "Parsed the configuration file " << configuration_filename << std::endl;
-            ROS_INFO("Parsed the configuration file %s", configuration_filename);
+            ROS_INFO("Parsed the configuration file %s", configuration_filename.c_str());
         }
         else
         {
@@ -165,10 +169,10 @@ void ObjectDetectorBasic::get_options_description(boost::program_options::option
 {
     desc.add_options()("help", "produces this help message");
 	desc.add_options()("configuration_file,c",
-						boost::program_options::value<string>()->default_value("test_monocular_objects_detection_lib.config.ini"),
+						boost::program_options::value<std::string>()->default_value("test_monocular_objects_detection_lib.config.ini"),
 						"indicates the path of the configuration .ini file");
 	desc.add_options()("save_detections",
-						boost::program_options::value<bool>->default_value(false),
+						boost::program_options::value<bool>()->default_value(false),
 						"save the detected objects in a data sequence file");
     desc.add_options()
             ("video_input.additional_border",
@@ -238,7 +242,7 @@ void ObjectDetectorBasic::set_monocular_image(input_image_const_view_t &input_vi
 
 void ObjectDetectorBasic::convert_sensor_to_gil(const sensor_msgs::Image& src, boost::gil::rgb8_view_t& dst)
 {
-    //Ideally a copy-less conversion 
+    //Ideally a copy-less conversion that redirects the pointer
     dst = boost::gil::interleaved_view(src.width, src.height, (boost::gil::rgb8_pixel_t*)src.data.data(), src.width*3*sizeof(uint8_t));
 }
 

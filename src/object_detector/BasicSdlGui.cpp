@@ -1,6 +1,11 @@
 
 #include "BasicSdlGui.hpp"
 
+#include <stdexcept>  // for std::cerr
+
+namespace pdt_module
+{
+
 void BasicSdlGui::init_gui(const int input_width, const int input_height)
 {
 	//Initialize the SDL Window interfaces
@@ -27,7 +32,7 @@ void BasicSdlGui::set_stereo_output(boost::gil::rgb8c_view_t left_image, boost::
 {
 	if(!gui_initialized)
 	{
-		init_gui(left_image.width, left_image.height);
+		init_gui(left_image.width(), left_image.height());
 	}
 	boost::gil::copy_and_convert_pixels(left_image, screen_left_view);
 	boost::gil::copy_and_convert_pixels(right_image, screen_right_view);
@@ -73,3 +78,5 @@ void BasicSdlGui::update_gui()
 	SDL_FreeSurface(surface_p);
 	return;
 }
+
+} //exit pdt_module namespace

@@ -25,26 +25,29 @@ namespace pdt_module
 
 class ObjectDetectorBasic
 {
+public:
+	typedef boost::gil::rgb8_view_t input_image_view_t;
+	typedef boost::gil::rgb8c_view_t input_image_const_view_t;
 private:
 	ros::NodeHandle _nh;
 	ros::ServiceClient next_frame_client;
 	ros::ServiceClient fetch_stereo_client;
 
-	scoped_ptr<BasicSdlGui> gui_p;
+	boost::scoped_ptr<pdt_module::BasicSdlGui> gui_p;
 
 	boost::program_options::variables_map options;
 
-	scoped_ptr<AddBorderFunctor> add_border_p;
+	boost::scoped_ptr<doppia::AddBorderFunctor> add_border_p;
 
-	shared_ptr<AbstractObjectsDetector> objects_detector_p;
+	boost::shared_ptr<doppia::AbstractObjectsDetector> objects_detector_p;
 
-	boost::gil::rgb8_pixel_t left_image;  //input_image_view_t
-	boost::gil::rgb8_pixel_t right_image; //input_image_view_t
+	// boost::gil::rgb8_view_t left_image;  //input_image_view_t
+	// boost::gil::rgb8_view_t right_image; //input_image_view_t
+	input_image_view_t left_image;  //input_image_view_t
+	input_image_view_t right_image; //input_image_view_t
 	boost::gil::rgb8_image_t::point_t input_dimensions;
 
 public:
-	typedef boost::gil::rgb8_view_t input_image_view_t;
-	typedef boost::gil::rgb8c_view_t input_image_const_view_t;
 
 	ObjectDetectorBasic(int argc, char** argv);
 
@@ -52,7 +55,7 @@ public:
 
 	void main_loop();
 
-	boost::program_options::variables_map& parse_arguments(int argc, char *argv[]) const;
+	boost::program_options::variables_map parse_arguments(int argc, char *argv[], boost::program_options::options_description& desc) const;
 
 	void get_options_description(boost::program_options::options_description &desc) const;
 
