@@ -15,6 +15,9 @@ set(CMAKE_MODULE_PATH "./" ${doppia_root} ${CMAKE_MODULE_PATH})
 ## This package is required for the pkg_check_modules() cmake function
 include(FindPkgConfig)
 
+## Set this flag if you want to compile and use the CUDA code. Otherwise only the CPU versions of the code are compiled.
+set(USE_GPU ON CACHE BOOL "Should the GPU be used ?" )
+
 ## This loads the local system settings from the doppia common_settings file
 include(${doppia_root}/common_settings.cmake)
 
@@ -52,12 +55,19 @@ pkg_search_module(SDL2 REQUIRED sdl2)
 
 
 ## Set this flag if you want to compile and use the CUDA code. Otherwise only the CPU versions of the code are compiled.
-set(USE_GPU ON CACHE BOOL "Should the GPU be used ?" )
+# set(USE_GPU ON CACHE BOOL "Should the GPU be used ?" )
 if(USE_GPU)
   find_package(CUDA 4.0 REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS} ${CUDA_CUT_INCLUDE_DIR} ${local_CUDA_CUT_INCLUDE_DIRS})
   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -arch compute_20 -code sm_20)
-  cuda_include_directories("${doppia_root}/libs/" ${CUDA_INCLUDE_DIRS} ${local_CUDA_CUT_INCLUDE_DIRS})
+  cuda_include_directories(
+    "${doppia_root}/libs/" 
+    ${CUDA_INCLUDE_DIRS} 
+    ${CUDA_CUT_INCLUDE_DIR}
+    ${local_CUDA_CUT_INCLUDE_DIR}
+    ${local_CUDA_CUT_INCLUDE_DIRS}
+    )
+  link_directories(${local_CUDA_CUT_LIBRARY_DIRS})
 endif(USE_GPU)
 
 
@@ -172,13 +182,21 @@ set(local_LIBRARY_DIRS
   "/usr/lib/sse2/atlas"
   "/usr/lib"     # Local library
   "/usr/lib32"   # Local 32-bit library
+  ${local_CUDA_LIB_DIR}
 )
 
 set(local_INCLUDE_DIRS
+  "${doppia_root}/libs"
+  "${doppia_root}/src"
+  "${doppia_root}/libs/cudatemplates/include"
+  "${doppia_root}/src/applications/boosted_learning"
+  "${doppia_root}/src/objects_detection/integral_channels" # to avoid doppia specific paths in the library header
+  "${doppia_root}/src/objects_detection" # to avoid doppia specific paths in the library header
+  "${doppia_stereo}/ground_plane"  # for protoc plane3d.pb.h
+  "${pdt_module_root}/"
+  "${pdt_module_root}/libs/"
   "/usr/include/eigen2/"
   "/usr/local/include/eigen2"
-  "${doppia_root}/libs/cudatemplates/include"
-  "${pdt_module_root}"
   "/usr/local/cuda/include"
 )
 
@@ -191,15 +209,15 @@ link_directories(
 )
 
 include_directories(
-  ${doppia_root}/libs
-  ${doppia_root}/src
-  ${doppia_stereo}/ground_plane  # for protoc plane3d.pb.h
+  # ${doppia_root}/libs
+  # ${doppia_root}/src
+  # ${doppia_stereo}/ground_plane  # for protoc plane3d.pb.h
   ${libpng_INCLUDE_DIRS}
   ${OpenEXR_INCLUDE_DIRS}
   ${opencv_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${local_INCLUDE_DIRS}
-  "${doppia_root}/libs/cudatemplates/include"
+  # "${doppia_root}/libs/cudatemplates/include"
   ${SDL2_INCLUDE_DIRS}   # for SDL2 graphics libraries
   ${catkin_INCLUDE_DIRS} # for the ROS libraries
 )
@@ -268,7 +286,12 @@ set(BUILD_OBJECT_DETECTOR_NODE ON)
 if(BUILD_OBJECT_DETECTOR_NODE)
   ##Load the object_detector module
   include(${pdt_module_root}/src/object_detector/build_object_detector.cmake)
-  add_executable(object_detector_node ${object_detector_SrcCpp})
+  add_executable(object_detector_node 
+    ${object_detector_SrcCpp}
+    ${object_detector_MonocularSrcCpp}
+    ${object_detector_StereoSrcCpp}
+    ${object_detector_HelpersCpp}
+  )
   add_dependencies(object_detector_node pdt_module_gencpp)
   target_link_libraries(object_detector_node ${catkin_LIBRARIES} ${object_detector_LinkLibs})
 endif(BUILD_OBJECT_DETECTOR_NODE)
