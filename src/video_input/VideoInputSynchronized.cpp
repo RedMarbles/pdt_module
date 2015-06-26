@@ -2,11 +2,11 @@
 
 #include "VideoInputSynchronized.hpp"
 
-#define TEST_COMPILE //Comment this if you don't want the test sections of the code to compile
+// #define TEST_COMPILE //Comment this if you don't want the test sections of the code to compile
 
 // #include <cstdlib>
 
-// #include <boost/bind.hpp>
+#include <boost/bind.hpp>
 
 namespace pdt_module
 {
@@ -52,7 +52,7 @@ VideoInputSynchronized::VideoInputSynchronized() :
 VideoInputSynchronized::~VideoInputSynchronized()
 {
 	//Do Nothing
-	ROS_INFO("Destroying VideoInputSynchronized instance");
+	ROS_INFO("Destroying VideoInputSynchronized instance"); //DEBUG
 #ifdef TEST_COMPILE
 	cv::destroyWindow("Output_Left");
 	cv::destroyWindow("Output_Right");
@@ -61,9 +61,11 @@ VideoInputSynchronized::~VideoInputSynchronized()
 
 void VideoInputSynchronized::stereo_image_callback(const sensor_msgs::ImageConstPtr& input_left_image, const sensor_msgs::ImageConstPtr& input_right_image)
 {
-	ROS_INFO("stereo_image_callback called");
+	// ROS_INFO("stereo_image_callback called"); //DEBUG
 	if(flag_load_next_frame)
 	{
+		// ROS_INFO("Loading next frame"); //DEBUG
+
 		flag_load_next_frame = false;
 
 		//This step is for preprocessing the images. Needs to be exported to another preprocessor class later.
@@ -74,8 +76,8 @@ void VideoInputSynchronized::stereo_image_callback(const sensor_msgs::ImageConst
 		//sensor_msgs::ImageConstPtr output_left_image; 
 		try
 		{
-			left_image_cv_ptr = cv_bridge::toCvShare(input_left_image);
-			right_image_cv_ptr = cv_bridge::toCvShare(input_right_image);
+			left_image_cv_ptr = cv_bridge::toCvShare(input_left_image,"rgb8");
+			right_image_cv_ptr = cv_bridge::toCvShare(input_right_image,"rgb8");
 		}
 		catch(cv_bridge::Exception &e)
 		{
@@ -98,6 +100,8 @@ void VideoInputSynchronized::stereo_image_callback(const sensor_msgs::ImageConst
 		left_image_p = left_reduced_cv_ptr->toImageMsg();
 		right_image_p = right_reduced_cv_ptr->toImageMsg();
 
+		ROS_INFO("Next frame loaded"); //DEBUG
+
 #ifdef TEST_COMPILE
 		cv::imshow("Output_Left", left_reduced_cv_ptr->image);
 		cv::imshow("Output_Right", right_reduced_cv_ptr->image);
@@ -110,14 +114,14 @@ void VideoInputSynchronized::stereo_image_callback(const sensor_msgs::ImageConst
 
 bool VideoInputSynchronized::load_next_frame(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
 {
-	ROS_INFO("load_next_frame_service called");
+	ROS_INFO("load_next_frame_service called"); //DEBUG
 	flag_load_next_frame = true;
 	return true;
 }
 
 bool VideoInputSynchronized::fetch_stereo_frame(pdt_module::FetchStereoImages::Request& req, pdt_module::FetchStereoImages::Response& res)
 {
-	ROS_INFO("fetch_next_frame_service called");
+	ROS_INFO("fetch_next_frame_service called"); //DEBUG
 	if(flag_load_next_frame) //There is still a pending load_next_frame request
 	{
 		res.left_image.encoding = "Empty";

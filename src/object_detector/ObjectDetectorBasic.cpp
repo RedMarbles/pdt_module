@@ -30,6 +30,8 @@
 #include "pdt_360deg_git/src/stereo_matching/stixels/StixelWorldEstimatorFactory.hpp"
 #endif
 
+#include <opencv2/opencv.hpp>  // OpenCV functions, only used for cv::waitKey() //DEBUG
+
 // #include "BasicSdlGui.hpp"
 
 namespace pdt_module
@@ -53,7 +55,8 @@ ObjectDetectorBasic::ObjectDetectorBasic(int argc, char** argv) : _nh("~")
 
 ObjectDetectorBasic::~ObjectDetectorBasic()
 {
-	//Do nothing right now
+	objects_detector_p.reset();
+    return;
 }
 
 void ObjectDetectorBasic::main_loop()
@@ -64,12 +67,16 @@ void ObjectDetectorBasic::main_loop()
         std_srvs::Empty empty_srv;
         next_frame_client.call(empty_srv);
 
+        ROS_INFO("Requested next frame load"); //DEBUG
+
         //Call service to fetch next frame
         pdt_module::FetchStereoImages stereo_srv;
         while( !(fetch_stereo_client.call(stereo_srv)) )
         {
-            ros::Duration(0.001).sleep(); //Sleep for 1 millisecond
+            ros::Duration(0.002).sleep(); //Sleep for 2 millisecond
         }
+
+        ROS_INFO("Stereo frame loaded. Beginning processing."); //DEBUG
 
         convert_sensor_to_gil(stereo_srv.response.left_image,  left_image);
         convert_sensor_to_gil(stereo_srv.response.right_image, right_image);
@@ -78,8 +85,9 @@ void ObjectDetectorBasic::main_loop()
         set_monocular_image(temp_left);
 
         objects_detector_p->compute();
+
         gui_p->set_stereo_output(left_image, right_image);
-        gui_p->update_gui();
+        gui_p->update_gui();     
     }
 }
 
