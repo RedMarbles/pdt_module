@@ -28,6 +28,8 @@ class ObjectDetectorBasic
 public:
 	typedef boost::gil::rgb8_view_t input_image_view_t;
 	typedef boost::gil::rgb8c_view_t input_image_const_view_t;
+	typedef doppia::AbstractObjectsDetector::detection_t detection_t;
+	typedef doppia::AbstractObjectsDetector::detections_t detections_t;
 private:
 	ros::NodeHandle _nh;
 	ros::ServiceClient next_frame_client;
@@ -40,6 +42,8 @@ private:
 	boost::scoped_ptr<doppia::AddBorderFunctor> add_border_p;
 
 	boost::shared_ptr<doppia::AbstractObjectsDetector> objects_detector_p;
+
+	doppia::AbstractObjectsDetector::detections_t detections; //A std::vector<Detections2D> type object
 
 	// boost::gil::rgb8_view_t left_image;  //input_image_view_t
 	// boost::gil::rgb8_view_t right_image; //input_image_view_t
@@ -64,6 +68,8 @@ public:
 	void set_monocular_image(input_image_const_view_t &input_view);
 
 	void convert_sensor_to_gil(const sensor_msgs::Image& src, boost::gil::rgb8_view_t& dst);
+
+	void draw_detections(detections_t& detections_local, input_image_view_t& frame_view);
 };
 
 } // exit pdt_module namespace

@@ -32,6 +32,10 @@
 
 #include <opencv2/opencv.hpp>  // OpenCV functions, only used for cv::waitKey() //DEBUG
 
+#include <boost/foreach.hpp> //Used in the drawing function
+#include "pdt_360deg_git/src/drawing/gil/colors.hpp"
+#include "pdt_360deg_git/src/drawing/gil/line.hpp"
+
 // #include "BasicSdlGui.hpp"
 
 namespace pdt_module
@@ -56,6 +60,7 @@ ObjectDetectorBasic::ObjectDetectorBasic(int argc, char** argv) : _nh("~")
 ObjectDetectorBasic::~ObjectDetectorBasic()
 {
 	objects_detector_p.reset();
+    gui_p.reset();
     return;
 }
 
@@ -67,7 +72,7 @@ void ObjectDetectorBasic::main_loop()
         std_srvs::Empty empty_srv;
         next_frame_client.call(empty_srv);
 
-        ROS_INFO("Requested next frame load"); //DEBUG
+        // ROS_INFO("Requested next frame load"); //DEBUG
 
         //Call service to fetch next frame
         pdt_module::FetchStereoImages stereo_srv;
@@ -76,7 +81,7 @@ void ObjectDetectorBasic::main_loop()
             ros::Duration(0.002).sleep(); //Sleep for 2 millisecond
         }
 
-        ROS_INFO("Stereo frame loaded. Beginning processing."); //DEBUG
+        // ROS_INFO("Stereo frame loaded. Beginning processing."); //DEBUG
 
         convert_sensor_to_gil(stereo_srv.response.left_image,  left_image);
         convert_sensor_to_gil(stereo_srv.response.right_image, right_image);
@@ -85,6 +90,15 @@ void ObjectDetectorBasic::main_loop()
         set_monocular_image(temp_left);
 
         objects_detector_p->compute();
+
+        //Extract detections
+        detections = objects_detector_p->get_detections();
+        if(detections.size() > 0)
+        {
+            ROS_WARN("Detections made : [%d]",detections.size());
+            draw_detections(detections, left_image);
+            cv::waitKey(1);
+        }
 
         gui_p->set_stereo_output(left_image, right_image);
         gui_p->update_gui();     
@@ -252,6 +266,16 @@ void ObjectDetectorBasic::convert_sensor_to_gil(const sensor_msgs::Image& src, b
 {
     //Ideally a copy-less conversion that redirects the pointer
     dst = boost::gil::interleaved_view(src.width, src.height, (boost::gil::rgb8_pixel_t*)src.data.data(), src.width*3*sizeof(uint8_t));
+}
+
+void ObjectDetectorBasic::draw_detections(detections_t& detections_local, input_image_view_t& frame_view)
+{
+    boost::gil::rgb8c_pixel_t color(254.0f,0,0); //Red bounding box
+    BOOST_FOREACH(const detection_t &detection, detections_local)
+    {
+        detection_t::rectangle_t box = detection.bounding_box;
+        doppia::draw_rectangle(frame_view, color, box, 4); //From {doppia_src}/drawing/gil/line.hpp
+    }
 }
 
 } //exit pdt_module namespace
