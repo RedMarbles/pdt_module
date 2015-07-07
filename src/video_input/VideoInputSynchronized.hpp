@@ -12,9 +12,16 @@
 #include "message_filters/subscriber.h"
 #include "message_filters/time_synchronizer.h"
 
+#include "preprocessor/AbstractPreprocessor.hpp"
+#include "preprocessor/MeiModelPreprocessor.hpp"
+#include "preprocessor/ResamplePreprocessor.hpp"
+#include "preprocessor/EmptyPreprocessor.hpp"
+
 #include <opencv2/opencv.hpp>  // OpenCV functions
 
 #include <boost/gil/gil_all.hpp> // boost::gil functions
+
+#include <boost/shared_ptr.hpp>
 
 namespace pdt_module
 {
@@ -31,9 +38,13 @@ private:
 	ros::ServiceServer load_next_frame_service;
 	ros::ServiceServer fetch_stereo_frame_service;
 	bool flag_load_next_frame;
+	const bool use_gui;
+
+	boost::shared_ptr<pdt_module::AbstractPreprocessor> distort_preprocessor_p;
+	boost::shared_ptr<pdt_module::AbstractPreprocessor> resample_preprocessor_p;
 
 public:
-	VideoInputSynchronized();
+	VideoInputSynchronized(const bool use_gui_ = false);
 
 	~VideoInputSynchronized();
 

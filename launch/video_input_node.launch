@@ -2,6 +2,13 @@
 
 	<group ns="pdt_module">
 		<node pkg="pdt_module" type="video_input_node" name="video_input_node">
+			<param name="param_left" type="string" value="/home/artezanz/Documents/Developer/catkin_ws/src/Disparity_ROS2/calib/new/camera_left.yaml"/> 
+		   <param name="param_right" type="string" value="/home/artezanz/Documents/Developer/catkin_ws/src/Disparity_ROS2/calib/new/camera_right.yaml"/> 
+		   <param name="param_ext" type="string" value="/home/artezanz/Documents/Developer/catkin_ws/src/Disparity_ROS2/calib/new/extrinsics.yaml"/> 
+		   <param name="camera_type" type="string" value="mei"/> 
+		   <param name="resample_ratio" type="double" value="2.0"/> 
+
+
 			<remap from="/pdt_module/video_input_node/input_left_image_topic" to="/stereo/color/left/image_raw" />
 			<remap from="/pdt_module/video_input_node/input_right_image_topic" to="/stereo/color/right/image_raw" />
 			<!--
