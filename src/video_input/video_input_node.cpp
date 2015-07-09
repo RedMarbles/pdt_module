@@ -1,5 +1,5 @@
-// This node implements the next_frame() function and publishes a boost::shared_ptr<boost::gil::rgb8c_view> type 
-// It also preprocesses the image
+/// This node implements the next_frame() function and publishes a boost::shared_ptr<boost::gil::rgb8c_view> type 
+/// It also preprocesses the image
 
 #include "ros/ros.h"
 // #include "std_srvs/Empty.h"
@@ -23,6 +23,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "video_input_node");
 	ros::NodeHandle nh_("~");
+	ros::Rate rate(20); /// Works at 20 Hz
 	ROS_INFO("video_input_node Starting up");
 
 	pdt_module::VideoInputSynchronized video_input_object(nh_, false, true); //Creates publishers and subscribers
@@ -32,7 +33,11 @@ int main(int argc, char** argv)
 	try
 	{
 		ROS_INFO("Starting spin()");
-		ros::spin();
+		while(ros::ok())
+		{
+			ros::spinOnce();
+			rate.sleep();
+		}
 	}
 	catch (ros::Exception &e)
 	{

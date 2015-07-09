@@ -8,6 +8,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "object_detector_node");
 	ros::NodeHandle nh_("~");
+	ros::Rate rate(5); // Works at 5 Hz
 
 	pdt_module::ObjectDetectorBasic object_detector(argc, argv, nh_, true, true); // Creates publishers and subscribers on initialization
 
@@ -18,7 +19,11 @@ int main(int argc, char** argv)
 	try
 	{
 		ROS_INFO("Starting spin()");
-		ros::spin();
+		while(ros::ok())
+		{
+			ros::spinOnce();
+			rate.sleep();
+		}
 	}
 	catch( ros::Exception &e )
 	{
