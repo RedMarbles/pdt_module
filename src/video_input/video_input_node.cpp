@@ -22,12 +22,10 @@
 int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "video_input_node");
+	ros::NodeHandle nh_("~");
 	ROS_INFO("video_input_node Starting up");
 
-	// ros::NodeHandle _nh("~");
-	// image_transport::ImageTransport _it(_nh);
-
-	pdt_module::VideoInputSynchronized video_input_object; //Creates publishers and subscribers
+	pdt_module::VideoInputSynchronized video_input_object(nh_, false, true); //Creates publishers and subscribers
 
 	ROS_INFO("video_input_node Initialized");
 

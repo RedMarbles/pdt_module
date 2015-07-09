@@ -24,15 +24,15 @@
 #include "pdt_360deg_git/src/objects_detection/AbstractObjectsDetector.hpp"
 #include "pdt_360deg_git/src/objects_detection/ObjectsDetectorFactory.hpp"
 
-#if !defined(MONOCULAR_OBJECTS_DETECTION_LIB) //Stereo detection libraries, not used here
+#if !defined(MONOCULAR_OBJECTS_DETECTION_LIB) /// Stereo detection libraries, not used here
 #include "pdt_360deg_git/src/stereo_matching/AbstractStereoMatcher.hpp"
 #include "pdt_360deg_git/src/stereo_matching/cost_volume/DisparityCostVolumeEstimatorFactory.hpp"
 #include "pdt_360deg_git/src/stereo_matching/stixels/StixelWorldEstimatorFactory.hpp"
 #endif
 
-#include <opencv2/opencv.hpp>  // OpenCV functions, only used for cv::waitKey() //DEBUG
+#include <opencv2/opencv.hpp>  /// OpenCV functions, only used for cv::waitKey() //DEBUG
 
-#include <boost/foreach.hpp> //Used in the drawing function
+#include <boost/foreach.hpp> /// Used in the drawing function
 #include "pdt_360deg_git/src/drawing/gil/colors.hpp"
 #include "pdt_360deg_git/src/drawing/gil/line.hpp"
 
@@ -44,17 +44,36 @@ namespace pdt_module
 using namespace doppia;
 using namespace std;
 
-ObjectDetectorBasic::ObjectDetectorBasic(int argc, char** argv) : _nh("~")
+ObjectDetectorBasic::ObjectDetectorBasic(int argc, char** argv, ros::NodeHandle& nh__, const bool use_gui_, const bool measure_time_) : 
+    nh_(nh__),
+    flag_use_gui(use_gui_),
+    flag_measure_time(measure_time_)
 {
-	next_frame_client = _nh.serviceClient<std_srvs::Empty>("next_frame_service");
-    fetch_stereo_client = _nh.serviceClient<pdt_module::FetchStereoImages>("fetch_stereo_service");
-    gui_p.reset(new BasicSdlGui());
+	// next_frame_client = nh_.serviceClient<std_srvs::Empty>("next_frame_service");
+    // fetch_stereo_client = nh_.serviceClient<pdt_module::FetchStereoImages>("fetch_stereo_service");
+    stereo_subscriber = nh_.subscribe("ProcessedStereo", 1, &ObjectDetectorBasic::stereo_monocular_callback, this);
+    
+    if(flag_use_gui)
+    {
+        gui_p.reset(new BasicSdlGui());
+    }
+    else
+    {
+        gui_p.reset(new EmptyGui());
+    }
 
     boost::program_options::options_description desc("Allowed options");
 	get_options_description(desc);
 	options = parse_arguments(argc, argv, desc);
 	//const bool use_ground_plane = false, use_stixels = false; //!MONOCULAR_OBJECTS_DETECTION_LIB
 	init_objects_detection();
+
+    /// Intialize timing variables
+    time_begin = ros::Time::now();
+    time_end = ros::Time::now();
+    duration_processing = ros::Duration(1.0);
+
+    ROS_INFO("ObjectDetectorBasic initialization complete");
 }
 
 ObjectDetectorBasic::~ObjectDetectorBasic()
@@ -64,54 +83,54 @@ ObjectDetectorBasic::~ObjectDetectorBasic()
     return;
 }
 
-void ObjectDetectorBasic::main_loop()
-{
-	while(ros::ok())
-    {
-        //Call service for next frame
-        std_srvs::Empty empty_srv;
-        next_frame_client.call(empty_srv);
+// void ObjectDetectorBasic::main_loop()
+// {
+// 	while(ros::ok())
+//     {
+//         /// Call service for next frame
+//         std_srvs::Empty empty_srv;
+//         next_frame_client.call(empty_srv);
 
-        // ROS_INFO("Requested next frame load"); //DEBUG
+//         // ROS_INFO("Requested next frame load"); //DEBUG
 
-        //Call service to fetch next frame
-        pdt_module::FetchStereoImages stereo_srv;
-        while( !(fetch_stereo_client.call(stereo_srv)) )
-        {
-            ros::Duration(0.002).sleep(); //Sleep for 2 millisecond
-        }
+//         /// Call service to fetch next frame
+//         pdt_module::FetchStereoImages stereo_srv;
+//         while( !(fetch_stereo_client.call(stereo_srv)) )
+//         {
+//             ros::Duration(0.002).sleep(); //Sleep for 2 millisecond
+//         }
 
-        // ROS_INFO("Stereo frame loaded. Beginning processing."); //DEBUG
+//         // ROS_INFO("Stereo frame loaded. Beginning processing."); //DEBUG
 
-        convert_sensor_to_gil(stereo_srv.response.left_image,  left_image);
-        convert_sensor_to_gil(stereo_srv.response.right_image, right_image);
+//         convert_sensor_to_gil(stereo_srv.response.left_image,  left_image);
+//         convert_sensor_to_gil(stereo_srv.response.right_image, right_image);
 
-        input_image_const_view_t temp_left = left_image;
-        set_monocular_image(temp_left);
+//         input_image_const_view_t temp_left = left_image;
+//         set_monocular_image(temp_left);
 
-        objects_detector_p->compute();
+//         objects_detector_p->compute();
 
-        //Extract detections
-        detections = objects_detector_p->get_detections();
-        if(detections.size() > 0)
-        {
-            ROS_WARN("Detections made : [%d]",detections.size());
-            draw_detections(detections, left_image);
-            cv::waitKey(1);
-        }
+//         /// Extract detections
+//         detections = objects_detector_p->get_detections();
+//         if(detections.size() > 0)
+//         {
+//             ROS_WARN("Detections made : [%d]",detections.size());
+//             draw_detections(detections, left_image);
+//             cv::waitKey(1);
+//         }
 
-        gui_p->set_stereo_output(left_image, right_image);
-        gui_p->update_gui();     
-    }
-}
+//         gui_p->set_stereo_output(left_image, right_image);
+//         gui_p->update_gui();     
+//     }
+// }
 
-//Uses the boost::program_options library to get the configuration settings
+/// Uses the boost::program_options library to get the configuration settings
 boost::program_options::variables_map ObjectDetectorBasic::parse_arguments(int argc, char *argv[], boost::program_options::options_description& desc) const
 {
 	// boost::program_options::options_description desc("Allowed options");
 	// get_options_description(desc);
 
-	//Parse command line arguments command line options
+	/// Parse command line arguments command line options
 	boost::program_options::variables_map options;
     try
     {
@@ -125,8 +144,8 @@ boost::program_options::variables_map ObjectDetectorBasic::parse_arguments(int a
     }
     catch (std::exception & e)
     {
-        //cout << "\033[1;31mError parsing the command line options:\033[0m " << e.what () << endl << endl;
-        //cout << desc << endl;
+        // cout << "\033[1;31mError parsing the command line options:\033[0m " << e.what () << endl << endl;
+        // cout << desc << endl;
         ROS_ERROR("Error parsing command line options: %s", e.what());
         exit(EXIT_FAILURE);
     }
@@ -137,7 +156,7 @@ boost::program_options::variables_map ObjectDetectorBasic::parse_arguments(int a
         exit(EXIT_SUCCESS);
     }
 
-    // parse the configuration file
+    /// Parse the configuration file
     {
         std::string configuration_filename;
         if(options.count("configuration_file") > 0)
@@ -146,7 +165,7 @@ boost::program_options::variables_map ObjectDetectorBasic::parse_arguments(int a
         }
         else
         {
-            //cout << "No configuration file provided. Using command line options only." << std::endl;
+            // cout << "No configuration file provided. Using command line options only." << std::endl;
             ROS_ERROR("No configuration file provided. Using command line options only.");
         }
         if (configuration_filename.empty() == false)
@@ -202,15 +221,15 @@ void ObjectDetectorBasic::get_options_description(boost::program_options::option
              "when using process_folder, will add border to the image to enable detection of cropped pedestrians. "
              "Value is in pixels (e.g. 50 pixels)");
 
-    // Objects detection options --
+    /// Objects detection options --
     desc.add(ObjectsDetectorFactory::get_args_options());
 
 	#if defined(MONOCULAR_OBJECTS_DETECTION_LIB)
     	// desc.add(AbstractVideoInput::get_args_options());
-	#else // not defined(MONOCULAR_OBJECTS_DETECTION_LIB)
-	    // we allow input file options, even if we do not use them
+	#else /// not defined(MONOCULAR_OBJECTS_DETECTION_LIB)
+	    /// we allow input file options, even if we do not use them
 	    // desc.add(VideoInputFactory::get_args_options());
-	    // Stixel world estimation options --
+	    /// Stixel world estimation options --
 	    desc.add(AbstractStereoMatcher::get_args_options());
 	    desc.add(DisparityCostVolumeEstimatorFactory::get_args_options());
 	    desc.add(StixelWorldEstimatorFactory::get_args_options());
@@ -218,19 +237,19 @@ void ObjectDetectorBasic::get_options_description(boost::program_options::option
     return;
 }
 
-//Initializes add_border_p, object_detector_p and the logging
+/// Initializes add_border_p, objects_detector_p and the logging
 void ObjectDetectorBasic::init_objects_detection()
 {
-	//Initializer for MONOCULAR_OBJECTS_DETECTION_LIB
+	/// Initializer for MONOCULAR_OBJECTS_DETECTION_LIB
 	// setup the logging //TODO: Needs to be fixed
     {
-        logging::get_log().clear(); // we reset previously existing options
+        logging::get_log().clear(); /// we reset previously existing options
 
-        // set our own stdout rules and set cout as console stream --
+        /// set our own stdout rules and set cout as console stream --
         logging::LogRuleSet rules_for_stdout;
-        rules_for_stdout.add_rule(logging::ErrorMessage, "*"); // we only print errors
+        rules_for_stdout.add_rule(logging::ErrorMessage, "*"); /// we only print errors
 
-        rules_for_stdout.add_rule(logging::WarningMessage, "*"); // also print warnings
+        rules_for_stdout.add_rule(logging::WarningMessage, "*"); /// also print warnings
 
         logging::get_log().set_console_stream(std::cout, rules_for_stdout); //TODO: Redirect this to a different stream from std::cout?
 
@@ -264,17 +283,52 @@ void ObjectDetectorBasic::set_monocular_image(input_image_const_view_t &input_vi
 
 void ObjectDetectorBasic::convert_sensor_to_gil(const sensor_msgs::Image& src, boost::gil::rgb8_view_t& dst)
 {
-    //Ideally a copy-less conversion that redirects the pointer
+    /// Ideally a copy-less conversion that redirects the pointer
     dst = boost::gil::interleaved_view(src.width, src.height, (boost::gil::rgb8_pixel_t*)src.data.data(), src.width*3*sizeof(uint8_t));
 }
 
 void ObjectDetectorBasic::draw_detections(detections_t& detections_local, input_image_view_t& frame_view)
 {
-    boost::gil::rgb8c_pixel_t color(254.0f,0,0); //Red bounding box
+    boost::gil::rgb8c_pixel_t color(254.0f,0,0); /// Red bounding box
     BOOST_FOREACH(const detection_t &detection, detections_local)
     {
         detection_t::rectangle_t box = detection.bounding_box;
-        doppia::draw_rectangle(frame_view, color, box, 4); //From {doppia_src}/drawing/gil/line.hpp
+        doppia::draw_rectangle(frame_view, color, box, 4); /// From {doppia_src}/drawing/gil/line.hpp
+    }
+}
+
+void ObjectDetectorBasic::stereo_monocular_callback(const pdt_module::StereoImage& stereo_message)
+{
+    if(flag_measure_time)
+    {
+        time_begin = ros::Time::now();
+    }
+
+    /// Convert input image into GIL format
+    convert_sensor_to_gil(stereo_message.left_image,  left_image);
+    convert_sensor_to_gil(stereo_message.right_image, right_image);
+
+    /// Detect pedestrians only in the left image
+    input_image_const_view_t temp_left = left_image; /// Required for const-correctness
+    this->set_monocular_image(temp_left);
+    objects_detector_p->compute();
+
+    /// Extract detections
+    detections = objects_detector_p->get_detections();
+    ROS_INFO("Humans detected : [%d]",detections.size());
+
+    if(flag_use_gui)
+    {
+        draw_detections(detections, left_image);
+        gui_p->set_stereo_output(left_image, right_image);
+        gui_p->update_gui();
+    }
+
+    if(flag_measure_time)
+    {
+        time_end = ros::Time::now();
+        duration_processing = time_end - time_begin;
+        ROS_INFO("Processing time : [%.5f s]  ,  Rate : [%.2f Hz]",duration_processing.toSec(), 1/duration_processing.toSec());
     }
 }
 

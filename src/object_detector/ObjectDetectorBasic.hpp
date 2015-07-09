@@ -2,11 +2,15 @@
 #ifndef _OBJECTDETECTORBASIC_HPP_
 #define _OBJECTDETECTORBASIC_HPP_
 
+/// ROS files
 #include "ros/ros.h"
-
 #include "std_srvs/Empty.h"
 #include "pdt_module/FetchStereoImages.h"
+#include "pdt_module/StereoImage.h"
 
+/// GUI classes
+#include "../AbstractGui.hpp"
+#include "../EmptyGui.hpp"
 #include "BasicSdlGui.hpp"
 
 #include <boost/program_options.hpp>
@@ -30,12 +34,16 @@ public:
 	typedef boost::gil::rgb8c_view_t input_image_const_view_t;
 	typedef doppia::AbstractObjectsDetector::detection_t detection_t;
 	typedef doppia::AbstractObjectsDetector::detections_t detections_t;
-private:
-	ros::NodeHandle _nh;
-	ros::ServiceClient next_frame_client;
-	ros::ServiceClient fetch_stereo_client;
 
-	boost::scoped_ptr<pdt_module::BasicSdlGui> gui_p;
+protected:
+	ros::NodeHandle nh_;
+	// ros::ServiceClient next_frame_client;
+	// ros::ServiceClient fetch_stereo_client;
+	ros::Subscriber stereo_subscriber;
+
+	/// GUI Output
+	const bool flag_use_gui;
+	boost::scoped_ptr<pdt_module::AbstractGui> gui_p;
 
 	boost::program_options::variables_map options;
 
@@ -51,13 +59,20 @@ private:
 	input_image_view_t right_image; //input_image_view_t
 	boost::gil::rgb8_image_t::point_t input_dimensions;
 
+	/// Timing variables
+	const bool flag_measure_time;
+	ros::Time time_begin, time_end;
+	ros::Duration duration_processing;
+
 public:
 
-	ObjectDetectorBasic(int argc, char** argv);
+	ObjectDetectorBasic(int argc, char** argv, ros::NodeHandle& nh__, const bool use_gui_ = false, const bool measure_time_ = false);
 
 	~ObjectDetectorBasic();
 
-	void main_loop();
+	// void main_loop();
+
+protected:
 
 	boost::program_options::variables_map parse_arguments(int argc, char *argv[], boost::program_options::options_description& desc) const;
 
@@ -66,6 +81,8 @@ public:
 	void init_objects_detection();
 
 	void set_monocular_image(input_image_const_view_t &input_view);
+
+	void stereo_monocular_callback(const pdt_module::StereoImage& stereo_message);
 
 	void convert_sensor_to_gil(const sensor_msgs::Image& src, boost::gil::rgb8_view_t& dst);
 

@@ -2,6 +2,7 @@
 #ifndef _BASICSDLGUI_HPP_
 #define _BASICSDLGUI_HPP_
 
+#include "../AbstractGui.hpp"
 
 #include <SDL2/SDL.h>
 
@@ -10,9 +11,9 @@
 namespace pdt_module
 {
 
-class BasicSdlGui
+class BasicSdlGui : public AbstractGui
 {
-private:
+protected:
 	SDL_Surface *screen_p;
 	SDL_Window *window_p;
 	boost::gil::rgb8_image_t screen_image;
