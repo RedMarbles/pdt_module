@@ -113,6 +113,8 @@ set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 add_message_files(
   FILES
   StereoImage.msg
+  Stixel_msg.msg
+  Stixels_msg.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -133,6 +135,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
   sensor_msgs
+  pdt_module
 )
 
 ###################################
@@ -295,11 +298,14 @@ if(BUILD_OBJECT_DETECTOR_NODE)
   target_link_libraries(object_detector_node ${catkin_LIBRARIES} ${object_detector_LinkLibs})
 endif(BUILD_OBJECT_DETECTOR_NODE)
 
-set(BUILD_STIXELS_ESTIMATOR_NODE OFF)
+set(BUILD_STIXELS_ESTIMATOR_NODE ON)
 if(BUILD_STIXELS_ESTIMATOR_NODE)
   ##Load the stixels_estimator module
   include(${pdt_module_root}/src/stixels_estimator/build_stixels_estimator.cmake)
-  add_executable(stixels_estimator_node ${stixels_estimator_SrcCpp})
+  add_executable(stixels_estimator_node 
+    ${stixels_estimator_SrcCpp}
+    ${stixels_estimator_HelpersCpp}
+  )
   add_dependencies(stixels_estimator_node pdt_module_gencpp)
   target_link_libraries(stixels_estimator_node ${catkin_LIBRARIES} ${stixels_estimator_LinkLibs})
 endif(BUILD_STIXELS_ESTIMATOR_NODE)

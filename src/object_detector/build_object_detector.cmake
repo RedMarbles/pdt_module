@@ -3,7 +3,7 @@ add_definitions(-DOBJECT_DETECTOR_NODE)
 file(GLOB object_detector_SrcCpp
 	"${pdt_module_root}/src/object_detector/object_detector_node.cpp"
 	"${pdt_module_root}/src/object_detector/ObjectDetectorBasic.cpp"
-	"${pdt_module_root}/src/object_detector/BasicSdlGui.cpp"
+	"${pdt_module_root}/src/BasicSdlGui.cpp"
 
 	"${doppia_src}/image_processing/*.cpp"
 	"${doppia_src}/drawing/gil/draw_matrix.cpp"

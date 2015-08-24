@@ -36,7 +36,6 @@
 #include "pdt_360deg_git/src/drawing/gil/colors.hpp"
 #include "pdt_360deg_git/src/drawing/gil/line.hpp"
 
-// #include "BasicSdlGui.hpp"
 
 namespace pdt_module
 {

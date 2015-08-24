@@ -1,0 +1,12 @@
+<launch>
+
+	<group ns="pdt_module">
+		<node pkg="pdt_module" type="stixels_estimator_node" name="stixels_estimator_node" args="-c $(find pdt_module)/src/stixels_estimator/test_objects_detection_lib.config.ini">
+			<remap from="/pdt_module/stixels_estimator_node/RectifiedStereo"  to="/pdt_module/video_input_node/ProcessedStereo" />
+			<param name="camera_calibration_protobuf" type="string" value="$(find pdt_module)/src/stixels_estimator/stereo_calibration_dataset1.proto.txt"/>
+			<param name="camera_height" type="double" value="1.5"/>
+			<param name="camera_roll" type="double" value="0.0"/>
+			<param name="camera_pitch" type="double" value="0.0"/>
+		</node>
+	</group>
+</launch>

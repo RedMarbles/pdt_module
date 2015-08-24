@@ -1,0 +1,17 @@
+%YAML:1.0
+model_type: MEI
+camera_name: camRight
+image_width: 1280
+image_height: 960
+mirror_parameters:
+   xi: 1.7262415468910404e+00
+distortion_parameters:
+   k1: -6.8098212347649775e-02
+   k2: 1.7757959609138535e-01
+   p1: 9.0770374328424941e-04
+   p2: -8.3808405884539677e-04
+projection_parameters:
+   gamma1: 1.0372011591324492e+03
+   gamma2: 1.0361872751148317e+03
+   u0: 6.1246332877076668e+02
+   v0: 4.9403160611176361e+02

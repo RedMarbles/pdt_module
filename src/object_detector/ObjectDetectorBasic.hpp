@@ -4,23 +4,31 @@
 
 /// ROS files
 #include "ros/ros.h"
+
+/// ROS services
 #include "std_srvs/Empty.h"
 #include "pdt_module/FetchStereoImages.h"
+
+/// ROS messages
+#include "sensor_msgs/Image.h"
 #include "pdt_module/StereoImage.h"
 
 /// GUI classes
 #include "../AbstractGui.hpp"
 #include "../EmptyGui.hpp"
-#include "BasicSdlGui.hpp"
+#include "../BasicSdlGui.hpp"
 
 #include <boost/program_options.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
 
+#include <boost/gil/gil_all.hpp>
+
 #include "pdt_360deg_git/src/video_input/preprocessing/AddBorderFunctor.hpp"
 
 #include "pdt_360deg_git/src/objects_detection/AbstractObjectsDetector.hpp"
+#include "pdt_360deg_git/src/objects_detection/Detection2d.hpp"
 
 //#include "pdt_360deg_git/src/applications/objects_detection_lib/objects_detection_lib.hpp" //Load pre-built object detection library
 

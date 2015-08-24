@@ -1,0 +1,106 @@
+
+# this is a text proto file, see protocol definition at doppia/src/video_input/calibration/calibration.proto
+
+# Stereo camera calibration used by the ICar fisheye color cameras for dataset1.
+
+name: "ICar stereo fisheye color camera - Dataset 1, at half-scale"
+
+left_camera {
+
+  name: "left camera"
+
+  internal_parameters {
+	k11: 543.93490
+	k12: 0
+	k13: 306.93536
+
+	k21: 0  
+	k22: 543.18257 
+	k23: 242.77933
+
+	k31: 0 
+	k32: 0 
+	k33: 1
+  }
+
+  # no radial_distortion (already processed)
+  
+  # no tangential_distortion (already processed)
+
+  pose {	
+	rotation {
+	# identity matrix
+		r11: 1
+		r12: 0
+		r13: 0
+
+		r21: 0
+		r22: 1
+		r23: 0
+
+		r31: 0
+		r32: 0
+		r33: 1
+	}
+
+	translation {
+	# zero vector
+		t1: 0
+		t2: 0
+		t3: 0
+	}
+  }
+
+} # end of left_camera
+
+
+
+right_camera {
+
+  name: "right camera"
+
+ internal_parameters {
+	k11: 518.60058
+	k12: 0
+	k13: 306.23166 
+
+	k21: 0  
+	k22: 518.09364 
+	k23: 247.01580
+
+	k31: 0 
+	k32: 0 
+	k33: 1
+  }
+
+  # no radial_distortion (already processed)
+  
+  # no tangential_distortion (already processed)
+
+  pose {	
+	rotation {
+		r11:  0.99984
+		r12: -0.0023506  
+		r13: -0.017501
+
+		r21:  0.0024013
+		r22:  0.99999
+		r23:  0.0028798
+
+		r31:  0.017494
+		r32: -0.0029214
+		r33:  0.99984
+	}
+
+	translation {
+		# in meters
+		t1: -0.29640303540498758
+		t2:  0.0041223230999117904
+		t3:  0.0041666245272390283
+	}
+  }
+
+} # end of right_camera
+
+
+
